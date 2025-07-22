@@ -1,0 +1,38 @@
+name: Coverity Scans
+
+on:
+  workflow_dispatch:
+    inputs:
+      PR_number:
+        description: 'Pull request number'
+        required: true
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  coverity-scan:
+    name: Coverity scans
+    runs-on: [innersource.prod.amr.dind]
+    container: cache-registry.caas.intel.com/cache/library/python:3.11
+    environment: d3
+    steps:
+    - uses: intel-innersource/frameworks.actions.certs@latest
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Fetch secrets from Conjur
+      uses: intel-innersource/frameworks.actions.conjur-fetch@v1.0.0
+      with:
+        host_id: host/github-apps-oidc/45019-hostgithubappsoidc45019r
+        secrets: >
+          FMSPAMVLT101/LOBUSER_prapp/AAM-DV-45019-DCAISCAN/Operating System-WindowsDomainAccounts-amr.corp.intel.com-sys_dcai_iaas/password|RAG_COVERITY_PASSWORD;
+          FMSPAMVLT101/LOBUSER_prapp/AAM-DV-45019-DCAISCAN/Operating System-WindowsDomainAccounts-amr.corp.intel.com-sys_dcai_iaas/username|RAG_COVERITY_USER
+
+
+    - name: Run Coverity scan
+      uses: ./.github/actions/coverity-scan
+      with:
+        ANALYZE_OPTIONS: --enable-default --security --webapp-security --enable-audit-checkers
+        COMPILER_TYPE: python
+        RAG_COVERITY_PASSWORD: ${{ env.RAG_COVERITY_PASSWORD }}
+        RAG_COVERITY_USER: ${{ env.RAG_COVERITY_USER }}
