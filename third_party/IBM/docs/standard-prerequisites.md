@@ -1,6 +1,6 @@
 # Standard Prerequisites
 
-Before deploying Enterprise Inference using the Standard pattern, ensure you have the essential requirements ready. The Standard pattern creates all infrastructure from scratch, making it ideal for new environments or complete automation.
+Before deploying Intel® AI for Enterprise Inference (Enterprise Inference) using the Standard pattern, ensure you have the essential requirements ready. The Standard pattern creates all infrastructure from scratch, making it ideal for new environments or complete automation.
 
 ## Overview
 
@@ -63,12 +63,12 @@ ibmcloud is key-create my-inference-key @~/.ssh/ibm-inference-key.pub
 **What you need:** Choose where to deploy your infrastructure  
 **How to choose:**
 
-**Available regions with Gaudi3 support:**
+**Available regions with Intel® Gaudi® 3 AI accelerator support:**
 - `us-east` (zones: us-east-1, us-east-2, us-east-3)
 - `us-south` (zones: us-south-1, us-south-2, us-south-3)
 - `eu-de` (zones: eu-de-1, eu-de-2, eu-de-3)
 
-> **Note:** These are the only regions where Intel Gaudi3 instances are currently available.
+> **Note:** These are the only regions where Intel Gaudi 3 AI accelerator instances are currently available.
 
 **Example values:**
 - Region: `us-east`
@@ -135,11 +135,10 @@ ibmcloud resource groups
 **Purpose:** Administrative access to Keycloak console
 
 #### keycloak_admin_password
-**What it is:** Admin password for Keycloak identity management  
-**Default:** `admin`  
+**What it is:** Admin password for Keycloak identity management   
 **Purpose:** Administrative access to Keycloak console
 
-> **Security Note:** Change the default credentials for production deployments!
+> **Security Note:** Use strong, unique credentials for production deployments!
 
 ### 10. TLS Configuration (user_cert, user_key)
 
@@ -166,6 +165,9 @@ For detailed instructions on domain configuration and certificate setup, see: [P
 ibmcloud is images --visibility public | grep ubuntu
 ```
 
+### 12. ssh_allowed_cidr
+0.0.0.0/0 - This is okay for development, but for production, you should strictly define var.ssh_allowed_cidr to a trusted IP range (e.g., your office or VPN IPs)
+
 ## Development/Testing Note
 
 For development or testing environments, you can skip the domain name and TLS certificate requirements. The system will automatically use `api.example.com` as the cluster URL, which works for internal cluster access and testing. However, external access will require port forwarding or SSH tunneling.
@@ -183,17 +185,17 @@ The Standard pattern automatically provisions:
 - **Floating IP:** Public IP for your instance
 
 ### Compute Infrastructure
-- **VSI Instance:** Gaudi3-enabled instance based on your model choice
+- **VSI Instance:** Intel Gaudi 3 AI accelerator-enabled instance based on your model choice
 - **SSH Access:** Configured with your SSH key
 
 ### Platform Components
 - **Kubernetes:** Single-node cluster optimized for AI workloads
-- **Intel Gaudi Operator:** Hardware management and optimization
+- **Intel® Gaudi® 3 AI accelerator operators:** Hardware management and optimization
 - **NGINX Ingress:** Traffic routing and load balancing
 - **Model Serving:** vLLM inference server with your selected model
-- **Authentication:** Keycloak identity management (optional)
-- **API Gateway:** APISIX for API management (optional)
-- **Monitoring:** Observability stack (optional)
+- **Authentication:** Keycloak identity management
+- **API Gateway:** APISIX for API management
+- **Monitoring:** Observability stack
 
 ## Account Requirements Verification
 
@@ -213,7 +215,7 @@ The Standard pattern automatically provisions:
 - [ ] Floating IP quota available
 
 ### Regional Availability
-- [ ] Target region supports Gaudi3 instances
+- [ ] Target region supports Intel Gaudi 3 AI accelerator instances
 - [ ] Chosen zone has available capacity
 - [ ] No maintenance windows in target region
 

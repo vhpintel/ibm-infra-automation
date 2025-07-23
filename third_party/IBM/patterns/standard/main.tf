@@ -3,8 +3,9 @@ provider "ibm" {
   region           = var.ibmcloud_region
   ibmcloud_timeout = 60
 }
+
 locals {
-    BASENAME = "iaas-gaudi40"
+    BASENAME = "iaas-gaudi"
 }
 
 data "ibm_resource_group" "target_rg" {
@@ -32,11 +33,11 @@ resource "ibm_is_security_group" "new_sg" {
     resource_group = data.ibm_resource_group.target_rg.id
 }
 
-# allow all incoming network traffic on port 22
-resource "ibm_is_security_group_rule" "ingress_ssh_all" {
+# SSH access - restrict to specific IP ranges For production, replace "0.0.0.0/0
+resource "ibm_is_security_group_rule" "ingress_ssh_restricted" {
     group     = ibm_is_security_group.new_sg.id
     direction = "inbound"
-    remote    = "0.0.0.0/0"
+    remote    = var.ssh_allowed_cidr
 
     tcp {
       port_min = 22
@@ -44,15 +45,51 @@ resource "ibm_is_security_group_rule" "ingress_ssh_all" {
     }
 }
 
-# Allow all outbound traffic
-resource "ibm_is_security_group_rule" "egress_all" {
+# Allow HTTPS outbound (443)
+resource "ibm_is_security_group_rule" "egress_https" {
   group     = ibm_is_security_group.new_sg.id
   direction = "outbound"
   remote    = "0.0.0.0/0"
 
   tcp {
-    port_min = 1
-    port_max = 65535
+    port_min = 443
+    port_max = 443
+  }
+}
+
+# Allow HTTP outbound (80)
+resource "ibm_is_security_group_rule" "egress_http" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "outbound"
+  remote    = "0.0.0.0/0"
+
+  tcp {
+    port_min = 80
+    port_max = 80
+  }
+}
+
+# Allow NTP outbound (123) for time synchronization
+resource "ibm_is_security_group_rule" "egress_ntp" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "outbound"
+  remote    = "0.0.0.0/0"
+
+  udp {
+    port_min = 123
+    port_max = 123
+  }
+}
+
+# Allow outbound SSH (22) for git operations
+resource "ibm_is_security_group_rule" "egress_ssh" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "outbound"
+  remote    = "0.0.0.0/0"
+
+  tcp {
+    port_min = 22
+    port_max = 22
   }
 }
 
@@ -65,6 +102,30 @@ resource "ibm_is_security_group_rule" "egress_dns" {
   udp {
     port_min = 53
     port_max = 53
+  }
+}
+
+# Allow inbound HTTPS for model endpoints and APIs
+resource "ibm_is_security_group_rule" "ingress_https" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "inbound"
+  remote    = "0.0.0.0/0"
+
+  tcp {
+    port_min = 443
+    port_max = 443
+  }
+}
+
+# Allow inbound HTTP for initial setup and redirects
+resource "ibm_is_security_group_rule" "ingress_http" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "inbound"
+  remote    = "0.0.0.0/0"
+
+  tcp {
+    port_min = 80
+    port_max = 80
   }
 }
 
@@ -108,6 +169,55 @@ resource "ibm_is_floating_ip" "public_ip" {
     name    = "${local.BASENAME}-fip"
     target = ibm_is_instance.iaas_vsi.primary_network_interface[0].id
     resource_group = data.ibm_resource_group.target_rg.id
+}
+
+# Kubernetes security group rules (after subnet is defined)
+# Allow Kubernetes API server port (6443) for cluster management
+resource "ibm_is_security_group_rule" "ingress_k8s_api" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "inbound"
+  remote    = ibm_is_subnet.new_subnet.ipv4_cidr_block
+
+  tcp {
+    port_min = 6443
+    port_max = 6443
+  }
+}
+
+# Allow Kubernetes node communication ports (10250, 10255)
+resource "ibm_is_security_group_rule" "ingress_k8s_nodes" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "inbound"
+  remote    = ibm_is_subnet.new_subnet.ipv4_cidr_block
+
+  tcp {
+    port_min = 10250
+    port_max = 10255
+  }
+}
+
+# Allow outbound Kubernetes API calls
+resource "ibm_is_security_group_rule" "egress_k8s_api" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "outbound"
+  remote    = ibm_is_subnet.new_subnet.ipv4_cidr_block
+
+  tcp {
+    port_min = 6443
+    port_max = 6443
+  }
+}
+
+# Allow outbound Kubernetes node communication
+resource "ibm_is_security_group_rule" "egress_k8s_nodes" {
+  group     = ibm_is_security_group.new_sg.id
+  direction = "outbound"
+  remote    = ibm_is_subnet.new_subnet.ipv4_cidr_block
+
+  tcp {
+    port_min = 10250
+    port_max = 10255
+  }
 }
 
 locals {
@@ -241,8 +351,8 @@ resource "null_resource" "run_script" {
       host        = ibm_is_floating_ip.public_ip.address
     }
     inline = [
-      "base64 -d /tmp/cert.b64 > ${var.user_cert}",
-      "base64 -d /tmp/key.b64 > ${var.user_key}",
+      "base64 -d /tmp/cert.b64 > ${var.cert_path}",
+      "base64 -d /tmp/key.b64 > ${var.key_path}",
       "chmod +x /tmp/run_script.sh",
       "/tmp/run_script.sh '${ibm_is_instance.iaas_vsi.primary_network_interface[0].primary_ipv4_address}' '${var.cluster_url}' '${var.models}' '${var.cert_path}' '${var.key_path}' '${var.user_cert}' '${var.user_key}'"
     ]

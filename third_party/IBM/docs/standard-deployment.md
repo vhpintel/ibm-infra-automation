@@ -2,7 +2,7 @@
 
 ## What is the Standard Pattern?
 
-The Standard pattern creates all infrastructure from scratch, giving you complete control and a fresh environment. It automatically provisions VPC, subnets, security groups, and all networking components needed for Enterprise Inference. Deployment takes <add-deployment-time> minutes but requires minimal existing infrastructure.
+The Standard pattern creates all infrastructure from scratch, giving you complete control and a fresh environment. It automatically provisions VPC, subnets, security groups, and all networking components needed for Intel® AI for Enterprise Inference (Enterprise Inference). Deployment takes ~45 minutes but requires minimal existing infrastructure.
 
 **Perfect for:**
 - Teams starting fresh in IBM Cloud
@@ -29,7 +29,7 @@ You can get the code in two ways:
 #### Option A: Download from IBM Cloud Catalog (Recommended)
 1. Go to [IBM Cloud Console](https://cloud.ibm.com)
 2. Navigate to "Catalog" → "Community registry"
-3. Search for "Enterprise Inference" and click on the tile
+3. Search for "Intel AI for Enterprise Inference" and click on the tile
 4. In the bottom right, click "Review deployment options" (highlighted in yellow in the screenshot below)
 
 ![Review Deployment Options](assets/review-deployment-options.png)
@@ -50,7 +50,7 @@ cd patterns/standard
 ```bash
 # Alternative: Clone from the OPEA repository
 git clone https://github.com/opea-project/Enterprise-Inference.git
-cd Enterprise-Inference/third_party/patterns/standard
+cd Enterprise-Inference/third_party/IBM/patterns/standard
 ```
 
 ### Step 2: Configure Variables
@@ -83,9 +83,14 @@ resource_group = "Default"  # or your custom resource group
 models = "2"  # Options: "1" (8B), "12" (70B), or "11" (405B)
 hugging_face_token = "hf_your_token_here"
 
-# Optional: Keycloak Admin Configuration
+# Required: ssh_allowed_cidr
+# For Production = Use company network range
+# For Development/Testing = 0.0.0.0/0
+ssh_allowed_cidr = "0.0.0.0/0"
+
+# Required: Keycloak Admin Configuration
 keycloak_admin_user = "admin"      # Default: "admin"
-keycloak_admin_password = "admin"  # Default: "admin" (change for production!)
+keycloak_admin_password = ""  # Enter the password for Keycloak login
 
 # Optional: TLS Configuration  
 # For Development/Testing: Leave cluster_url as "api.example.com" and keep default certificate values
@@ -104,7 +109,7 @@ terraform init
 # Preview what will be created
 terraform plan
 
-# Deploy (takes <add-deployment-time> minutes)
+# Deploy (takes ~45 minutes)
 terraform apply -auto-approve
 
 # Save the outputs
@@ -130,7 +135,7 @@ kubectl get pods -A
 ### Step 1: Access the Catalog
 1. Log into [IBM Cloud Console](https://cloud.ibm.com)
 2. Go to "Catalog" → "Community registry"
-3. Search for "Enterprise Inference"
+3. Search for "Intel AI for Enterprise Inference"
 4. Click the tile
 
 ### Step 2: Select Standard Variation
@@ -150,7 +155,7 @@ kubectl get pods -A
    - **Region:** Select from dropdown
    - **Resource group:** Select from dropdown
 
-> **Note:** For Gaudi deployments, ensure you select a region with Gaudi availability: `us-east`, `us-south`, or `eu-de`
+> **Note:** For Intel® Gaudi® 3 AI accelerator deployments, ensure you select a region with Gaudi availability: `us-east`, `us-south`, or `eu-de`
 
 **OR**
 
@@ -173,7 +178,7 @@ On the **Configure architecture** page, edit all required inputs (turn on **Adva
 2. Click "Validate" to check your configuration - you'll see "Validating changes..." and "Generating plan..." which takes 2-3 minutes
 3. Once you see "Validation successful", enter a comment and click "Approve" to enable the Deploy button
 4. Click "Deploy" in the bottom-right 
-5. Monitor "Deploying changes..." progress and click "View logs" to see detailed deployment logs (deployment takes ~20 minutes)
+5. Monitor "Deploying changes..." progress and click "View logs" to see detailed deployment logs (deployment takes ~45 minutes)
 
 ![Deployment Progress](assets/in_progress.png)
 
@@ -207,17 +212,17 @@ The Standard pattern automatically provisions:
 - **Floating IP:** Public IP for your instance
 
 ### Compute Infrastructure
-- **VSI Instance:** Gaudi3-enabled instance based on your model choice
+- **VSI Instance:** Intel Gaudi 3 AI accelerator-enabled instance based on your model choice
 - **SSH Access:** Configured with your SSH key
 
 ### Platform Components
 - **Kubernetes:** Single-node cluster
-- **Intel Gaudi Operator:** Hardware management
+- **Intel® Gaudi® 3 AI accelerator operators:** Hardware management
 - **NGINX Ingress:** Traffic routing
 - **Model Serving:** vLLM inference server
 - **Authentication:** Keycloak identity management
 - **API Gateway:** APISIX for API management
-- **Monitoring:** Observability stack (optional)
+- **Monitoring:** Observability stack
 
 ## Next Steps
 

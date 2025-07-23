@@ -1,6 +1,6 @@
 # Quickstart Prerequisites
 
-Before deploying Enterprise Inference using the Quickstart pattern, ensure you have all the required components ready. The Quickstart pattern assumes you already have IBM Cloud infrastructure in place.
+Before deploying Intel® AI for Enterprise Inference (Enterprise Inference) using the Quickstart pattern, ensure you have all the required components ready. The Quickstart pattern assumes you already have IBM Cloud infrastructure in place.
 
 ## Overview
 
@@ -123,7 +123,7 @@ ibmcloud resource groups
 **Default:** `us-east`  
 **Options:** `us-east`, `us-south`, `eu-de`
 
-> **Note:** These are the only regions where Intel Gaudi3 instances are currently available.
+> **Note:** These are the only regions where Intel® Gaudi® 3 AI accelerator instances are currently available.
 
 #### Zone (instance_zone)
 - Choose based on your existing infrastructure
@@ -137,7 +137,7 @@ ibmcloud resource groups
 
 #### Instance Profile (instance_profile)
 **Default:** `gx3d-160x1792x8gaudi3`  
-**Purpose:** The Gaudi3-enabled instance type
+**Purpose:** The Intel Gaudi 3 AI accelerator-enabled instance type
 
 #### Image (image)
 **What it is:** The operating system image for your instance  
@@ -190,11 +190,10 @@ ibmcloud resource groups
 **Purpose:** Administrative access to Keycloak console
 
 #### keycloak_admin_password
-**What it is:** Admin password for Keycloak identity management  
-**Default:** `admin`  
+**What it is:** Admin password for Keycloak identity management   
 **Purpose:** Administrative access to Keycloak console
 
-> **Security Note:** Change the default credentials for production deployments!
+> **Security Note:** Use strong, unique credentials for production deployments!
 
 ### 11. TLS Configuration (user_cert, user_key)
 
@@ -242,7 +241,7 @@ Before proceeding with deployment, verify your infrastructure:
 - [ ] Resource group permissions verified
 
 ### Quota and Limits
-- [ ] Sufficient quota for Gaudi3 instances
+- [ ] Sufficient quota for Intel Gaudi 3 AI accelerator instances
 - [ ] Region supports your chosen instance profile
 - [ ] No conflicting resource names
 

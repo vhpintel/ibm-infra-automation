@@ -1,7 +1,7 @@
 {
     "products": [
         {
-            "label": "Intel AI for Enterprise Inference",
+            "label": "Intel® AI for Enterprise Inference",
             "name": "deploy-architecture-ibm-iaas",
             "version": "1.0.0",
             "product_kind": "solution",
@@ -15,21 +15,21 @@
               "opea",
               "enterprise-inference"
             ],
-			"short_description": "Intel® AI for Enterprise Inference is aimed to streamline the deployment and management of inference services on Intel hardware.",
-            "long_description": "This solution leverages Terraform to automate the deployment of virtual machines on IBM Cloud, specifically tailored for AI workloads using Intel Gaudi hardware. It installs all necessary Intel Gaudi-specific operators and deploys large language models (LLMs) on single node K8S cluster using OPEA's Enterprise Inference framework. By integrating cutting-edge AI infrastructure with cloud automation, this solution provides a streamlined approach to deploying and managing machine learning models in a scalable and efficient manner. Deploy this to automate the process of VM spin up, manage installation of Intel Gaudi operators and LLM models on K8S cluster using Terraform referring to OPEA's Enterprise Inference framework.",
+			"short_description": "Intel® AI for Enterprise Inference (Enterprise Inference) is aimed to streamline the deployment and management of inference services on Intel® hardware.",
+            "long_description": "This solution leverages Terraform to automate the deployment of virtual machines on IBM Cloud, specifically tailored for AI workloads using Intel® Gaudi® 3 AI accelerators. It installs all necessary Intel Gaudi 3 AI accelerator-specific operators and deploys large language models (LLMs) on single node K8S cluster using Intel® AI for Enterprise Inference framework from the Open Platform for Enterprise AI (OPEA). By integrating cutting-edge AI infrastructure with cloud automation, this solution provides a streamlined approach to deploying and managing machine learning models in a scalable and efficient manner. Deploy this to automate the process of VM spin up, manage installation of Intel Gaudi 3 AI accelerator operators and LLM models on K8S cluster using Terraform referring to OPEA's Intel® AI for Enterprise Inference framework.",
             "offering_icon_url": "https://intel.sharepoint.com/:i:/r/sites/gscgems/Image%20Gallery/Company%20Logos/Intel%20Logos/Boxed/logo-classicblue-onecolor-3000px.png",
             "features": [
 			  {
                 "title": "Optimized AI Deployment",
-                "description": "Leverage Intel Gaudi hardware to maximize performance for AI workloads, ensuring efficient processing and model deployment"
+                "description": "Leverage Intel® Gaudi® 3 AI accelerators to maximize performance for AI workloads, ensuring efficient processing and model deployment"
               },
 			  {
                 "title": "Automated Infrastructure Setup",
-                "description": "Utilization of Terraform scripts to automate the provisioning of VSI on IBM Cloud, reducing setup time and minimizing manual intervention"
+                "description": "Utilization of Terraform scripts to automate the provisioning of virtual server instances (VSI) on IBM Cloud, reducing setup time and minimizing manual intervention"
               },
               {
-                "title": "Seamless Integration with OPEA's Enterprise Inference",
-                "description": "Deploy large language models (LLMs) using OPEA's Enterprise Inference framework, streamlining operations and improving productivity "
+                "title": "Seamless Integration with OPEA's Intel® AI for Enterprise Inference",
+                "description": "Deploy large language models (LLMs) using OPEA's Intel AI for Enterprise Inference framework, streamlining operations and improving productivity"
               }
             ],
 	        "flavors": [
@@ -230,7 +230,7 @@
                         {
                             "key": "keycloak_admin_password",
                             "type": "multiline_secure_value",
-                            "default_value": "admin",
+                            "default_value": "",
                             "description": "Keycloak admin password",
 							"required": true
                         },
@@ -267,7 +267,7 @@
 						{
                             "key": "cpu_or_gpu",
                             "type": "string",
-                            "default_value": "gpu",
+                            "default_value": "gaudi3",
                             "description": "This variable specifies where the model should be running"
                         },
                         {
@@ -297,7 +297,7 @@
                     ]
                 },
 		        {
-                    "label": "standard",
+                    "label": "Standard",
                     "name": "standard",
 		            "working_directory": "third_party/IBM/patterns/standard",
                     "compliance": {},
@@ -458,8 +458,15 @@
                         {
                             "key": "keycloak_admin_password",
                             "type": "multiline_secure_value",
-                            "default_value": "admin",
+                            "default_value": "",
                             "description": "Keycloak admin password",
+							"required": true
+                        },
+						{
+                            "key": "ssh_allowed_cidr",
+                            "type": "string",
+                            "default_value": "0.0.0.0/0",
+                            "description": "CIDR block allowed for SSH access. Change to your organization's IP range for better security and for non-developement deployments",
 							"required": true
                         },
 						{
@@ -467,7 +474,14 @@
                             "type": "string",
                             "default_value": "gaudi3-os-u22-01-21-0",
                             "description": "This variable image name to be used for IAAS bringup on VSI instance"
+                        },
+						{
+                            "key": "cpu_or_gpu",
+                            "type": "string",
+                            "default_value": "gaudi3",
+                            "description": "This variable specifies where the model should be running"
                         }
+						
 		            ]
 		        }
 	        ]

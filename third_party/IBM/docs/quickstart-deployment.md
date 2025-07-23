@@ -2,7 +2,7 @@
 
 ## What is the Quickstart Pattern?
 
-The Quickstart pattern is the fastest way to deploy Enterprise Inference when you already have IBM Cloud infrastructure in place. It uses your existing VPC, subnets, and security groups to deploy a complete AI inference stack in <~20> minutes.
+The Quickstart pattern is the fastest way to deploy Intel® AI for Enterprise Inference (Enterprise Inference) when you already have IBM Cloud infrastructure in place. It uses your existing VPC, subnets, and security groups to deploy a complete AI inference stack in ~40 minutes.
 
 **Perfect for:**
 - Teams with existing IBM Cloud infrastructure
@@ -28,7 +28,7 @@ You can get the code in two ways:
 #### Option A: Download from IBM Cloud Catalog (Recommended)
 1. Go to [IBM Cloud Console](https://cloud.ibm.com)
 2. Navigate to "Catalog" → "Community registry"
-3. Search for "Enterprise Inference" and click on the tile
+3. Search for "Intel AI for Enterprise Inference" and click on the tile
 4. In the bottom right, click "Review deployment options" (highlighted in yellow in the screenshot below)
 
 ![Review Deployment Options](assets/review-deployment-options.png)
@@ -49,7 +49,7 @@ cd patterns/quickstart
 ```bash
 # Alternative: Clone from the OPEA repository
 git clone https://github.com/opea-project/Enterprise-Inference.git
-cd Enterprise-Inference/third_party/patterns/quickstart
+cd Enterprise-Inference/third_party/IBM/patterns/quickstart
 ```
 
 ### Step 2: Configure Variables
@@ -87,9 +87,9 @@ ssh_private_key = file("~/.ssh/ibm-inference-key")
 models = "2"  # Options: "1" (8B), "12" (70B), or "11" (405B)
 hugging_face_token = "hf_your_token_here"
 
-# Optional: Keycloak Admin Configuration
+# Required: Keycloak Admin Configuration
 keycloak_admin_user = "admin"      # Default: "admin"
-keycloak_admin_password = "admin"  # Default: "admin" (change for production!)
+keycloak_admin_password = ""  # Enter the password for Keycloak login
 
 # Optional: TLS Configuration  
 # For Development/Testing: Leave cluster_url as "api.example.com" and keep default certificate values
@@ -107,7 +107,7 @@ terraform init
 # Preview what will be created
 terraform plan
 
-# Deploy (takes <~20> minutes)
+# Deploy (takes ~40 minutes)
 terraform apply -auto-approve
 
 # Save the outputs
@@ -133,7 +133,7 @@ kubectl get pods -A
 ### Step 1: Access the Catalog
 1. Log into [IBM Cloud Console](https://cloud.ibm.com)
 2. Go to "Catalog" → "Community registry"
-3. Search for "Enterprise Inference"
+3. Search for "Intel AI for Enterprise Inference"
 4. Click the tile
 
 ### Step 2: Select Quickstart Variation
@@ -153,7 +153,7 @@ kubectl get pods -A
    - **Region:** Select from dropdown
    - **Resource group:** Select from dropdown
 
-> **Note:** For Gaudi deployments, ensure you select a region with Gaudi availability: `us-east`, `us-south`, or `eu-de`
+> **Note:** For Intel® Gaudi® 3 AI accelerator deployments, ensure you select a region with Gaudi availability: `us-east`, `us-south`, or `eu-de`
 
 **OR**
 
@@ -176,7 +176,7 @@ On the **Configure architecture** page, edit all required inputs (turn on **Adva
 2. Click "Validate" to check your configuration - you'll see "Validating changes..." and "Generating plan..." which takes 2-3 minutes
 3. Once you see "Validation successful", enter a comment and click "Approve" to enable the Deploy button
 4. Click "Deploy" in the bottom-right 
-5. Monitor "Deploying changes..." progress and click "View logs" to see detailed deployment logs (deployment takes ~20 minutes for quickstart variation)
+5. Monitor "Deploying changes..." progress and click "View logs" to see detailed deployment logs (deployment takes ~40 minutes for quickstart variation)
 
 ![Deployment Progress](assets/in_progress.png)
 

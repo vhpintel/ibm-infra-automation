@@ -29,6 +29,12 @@ variable "instance_zone" {
   default     = ""
 }
 
+variable "ssh_allowed_cidr" {
+  description = "CIDR block allowed for SSH access. Use your organization's IP range for better security."
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
 variable "ibmcloud_api_key" {
   description = "IBM Cloud API Key"
   type        = string
@@ -91,9 +97,9 @@ variable "models" {
   default     = "1"
 }
 variable "cpu_or_gpu" {
-  description = "This variable specifies where the model should be running (cpu/gpu)"
+  description = "This variable specifies where the model should be running"
   type        = string
-  default     = "gpu"
+  default     = "gaudi3"
 }
 variable "deploy_kubernetes_fresh" {
   description = "This variable specfies whether to deploy Kubernetes cluster freshly"

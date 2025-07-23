@@ -126,9 +126,9 @@ variable "models" {
   default     = "1"
 }
 variable "cpu_or_gpu" {
-  description = "This variable specifies where the model should be running (cpu/gpu)"
+  description = "This variable specifies where the model should be running"
   type        = string
-  default     = "gpu"
+  default     = "gaudi3"
 }
 variable "deploy_kubernetes_fresh" {
   description = "This variable specfies whether to deploy Kubernetes cluster freshly"

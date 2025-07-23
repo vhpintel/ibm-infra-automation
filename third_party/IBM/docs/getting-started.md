@@ -1,16 +1,14 @@
-# Getting Started with Enterprise Inference on IBM Cloud
+# Getting Started with Intel® AI for Enterprise Inference on IBM Cloud
 
-This guide provides an overview of deployment options for Enterprise Inference on IBM Cloud and helps you select the appropriate deployment pattern for your requirements.
+This guide provides an overview of deployment options for Intel® AI for Enterprise Inference (Enterprise Inference) on IBM Cloud and helps you select the appropriate deployment pattern for your requirements.
 
-## What is Enterprise Inference?
+## What is Intel® AI for Enterprise Inference?
 
-Enterprise Inference is an IBM Cloud Deployable Architecture that automates the deployment of OpenAI-compatible AI inference endpoints powered by Intel Gaudi accelerators and Intel Xeon processors. It packages everything you need - Kubernetes, model serving, authentication, and monitoring - into a single, automated deployment.
-
-> **Learn more:** For an in-depth introduction to Enterprise Inference as a Deployable Architecture on IBM Cloud, see our [blog post](https://link-to-blog-placeholder).
+Intel AI for Enterprise Inference is an IBM Cloud deployable architecture that automates the deployment of OpenAI-compatible AI inference endpoints powered by Intel® Gaudi® 3 AI accelerators and Intel® Xeon® processors. It packages everything you need - Kubernetes, model serving, authentication, and monitoring - into a single, automated deployment.
 
 ## Deployment Patterns
 
-Enterprise Inference provides two deployment patterns to accommodate different infrastructure requirements and organizational preferences.
+Intel AI for Enterprise Inference provides two deployment patterns to accommodate different infrastructure requirements and organizational preferences.
 
 ### Quickstart Pattern
 
@@ -20,7 +18,7 @@ The Quickstart pattern is designed for organizations with existing IBM Cloud inf
 
 **Requirements:**
 - Existing VPC, subnet, and security groups
-- Deployment time: ~20 minutes
+- Deployment time: ~40 minutes
 
 **Documentation:** [Quickstart Deployment Guide](./quickstart-deployment.md)
 
@@ -33,7 +31,7 @@ The Standard pattern provides complete infrastructure automation and is suitable
 **Features:**
 - Automated creation of all networking components
 - Automated security group configuration
-- Deployment time: <add-deployment-time> minutes
+- Deployment time: ~45 minutes
 
 **Documentation:** [Standard Deployment Guide](./standard-deployment.md)
 

@@ -37,16 +37,30 @@ if [[ "$1" == "model-deploy" ]]; then
   echo "[$(date)] Phase 2: Deploying models with PVC support"
   cd /home/ubuntu/Enterprise-Inference/core
   echo -e '3\n2\n1\nyes\ny\n' | bash inference-stack-deploy.sh --models "$2"
+  kubectl delete pods -l app.kubernetes.io/component=device-plugin,app.kubernetes.io/name=habana-ai -n habana-ai-operator --ignore-not-found=true
+  
+  echo "[$(date)] Installing habanalabs-container-runtime..."
+  if sudo DEBIAN_FRONTEND=noninteractive apt install -y habanalabs-container-runtime=1.21.0-555; then
+    echo "[$(date)] habanalabs-container-runtime installation successful"
+  else
+    echo "[$(date)] WARNING: habanalabs-container-runtime installation failed, continuing with scaling..."
+  fi
+  
+  echo "[$(date)] Starting scaling logic for model $2..."
   # scaling logic
   if [[ "$2" == "1" ]]; then
     kubectl scale deployment vllm-llama-8b --replicas=8
-  elif [[ "$2" == "2" ]]; then
-    kubectl scale deployment vllm-llama3-70b --replicas=2
+    echo "[$(date)] Scaled vllm-llama-8b to 8 replicas"
+  elif [[ "$2" == "12" ]]; then
+    kubectl scale deployment vllm-llama-3-3-70b --replicas=2
+    echo "[$(date)] Scaled vllm-llama-3-3-70b to 2 replicas"
   elif [[ "$2" == "11" ]]; then
     kubectl scale deployment vllm-llama3-405b --replicas=1
+    echo "[$(date)] Scaled vllm-llama3-405b to 1 replica"
   else
-    echo "Unsupported model selected"
+    echo "Unsupported model selected: $2"
   fi
+  echo "[$(date)] Model deployment and scaling complete"
   exit 0
 fi
 

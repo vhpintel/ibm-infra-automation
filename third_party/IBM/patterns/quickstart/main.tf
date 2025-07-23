@@ -69,7 +69,7 @@ locals {
   model_map = {
     "1"  = "Llama-3.1-8B-Instruct"
     "11" = "Llama-3.1-405B-Instruct"
-	"12"  = "Llama-3.3-70B-Instruct"
+	  "12"  = "Llama-3.3-70B-Instruct"
   }
 
   selected_model = lookup(local.model_map, var.models, "unknown-model")
@@ -182,9 +182,9 @@ resource "null_resource" "run_script" {
       private_key = can(file(var.ssh_private_key)) ? file(var.ssh_private_key) : var.ssh_private_key
       host        = ibm_is_floating_ip.instance_name.address
     }
-    inline = [
-      "base64 -d /tmp/cert.b64 > ${var.user_cert}",
-      "base64 -d /tmp/key.b64 > ${var.user_key}",
+   inline = [
+      "base64 -d /tmp/cert.b64 > ${var.cert_path}",
+      "base64 -d /tmp/key.b64 > ${var.key_path}",
       "chmod +x /tmp/run_script.sh",
       "/tmp/run_script.sh '${ibm_is_instance.instance_name.primary_network_interface[0].primary_ipv4_address}' '${var.cluster_url}' '${var.models}' '${var.cert_path}' '${var.key_path}' '${var.user_cert}' '${var.user_key}'"
     ]
