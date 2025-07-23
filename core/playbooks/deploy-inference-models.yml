@@ -19,7 +19,7 @@
     apisix_enabled: 'false'
     ingress_enabled: 'false'
     deploy_keycloak: 'no'
-    tensor_parallel_size_vllm: 1
+    tensor_parallel_size_vllm: ""
     gaudi_deployment: 'true'
     huggingface_model_id: 'false'
     hugging_face_model_deployment: 'false'
