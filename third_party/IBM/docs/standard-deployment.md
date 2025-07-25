@@ -32,16 +32,15 @@ You can get the code in two ways:
 3. Search for "Intel AI for Enterprise Inference" and click on the tile
 4. In the bottom right, click "Review deployment options" (highlighted in yellow in the screenshot below)
 
-![Review Deployment Options](assets/review-deployment-options.png)
+![Review Deployment Options](assets/standard/review_deployment_options.png)
 
 5. Click "Work with code" → "Download code"
 6. Save the .tar.gz file and extract it:
 
 ```bash
 # Extract the downloaded file
-tar -xzf enterprise-inference-*.tar.gz
-cd ibm-da-tag
-cd patterns/standard
+tar -xzf *-1.0.0.tar.gz
+cd third_party/IBM/patterns/standard
 ```
 
 **OR**
@@ -116,12 +115,12 @@ terraform apply -auto-approve
 terraform output > deployment-info.txt
 ```
 
-![Terraform Deployment Progress](assets/terraform-deployment-progress.png)
+![Terraform Deployment Progress](assets/standard/cli-progress.png)
 
 ### Step 4: Verify
 ```bash
 # Get your instance IP
-INSTANCE_IP=$(terraform output -raw instance_public_ip)
+INSTANCE_IP=$(terraform output -raw floating_ip)
 
 # SSH to your instance
 ssh -i ~/.ssh/ibm-inference-key ubuntu@$INSTANCE_IP
@@ -142,7 +141,7 @@ kubectl get pods -A
 1. On the variations page, select "Standard"
 2. Click "Add to project" in the bottom right (highlighted in yellow below)
 
-![Add to Project](assets/add_to_project.png)
+![Add to Project](assets/standard/add_to_project.png)
 
 ### Step 3: Configure Project
 
@@ -180,23 +179,32 @@ On the **Configure architecture** page, edit all required inputs (turn on **Adva
 4. Click "Deploy" in the bottom-right 
 5. Monitor "Deploying changes..." progress and click "View logs" to see detailed deployment logs (deployment takes ~45 minutes)
 
-![Deployment Progress](assets/in_progress.png)
+![Deployment Progress](assets/standard/in_progress.png)
 
 6. Once deployment completes, you'll see "Deployment successful" with "Changes deployed successfully" 
 
-![Deployment Successful](assets/deployed_successfully.png)
+![Deployment Successful](assets/standard/deployed_successfully.png)
 
 7. Click on "Changes deployed successfully" (highlighted in yellow) to view deployment details
 
-![Deployment Details](assets/click_for_logs.png)
+![Deployment Details](assets/standard/click_for_logs.png)
 
-8. Click on the "Logs" tab to see complete deployment logs. Scroll to the bottom to find the important outputs including your instance IP address
+8. Click on the "Logs" tab to view complete deployment logs
 
-![Apply Complete with Outputs](assets/apply_complete.png)
+### Step 6: View Deployment Outputs
+To view deployment outputs including instance IP and model endpoints:
+1. Click **Navigation Menu** (☰) in the top-left
+2. Select **Projects**
+3. Choose your project from the list
+4. Click on **Configurations**
+5. Click on your deployment name
+6. You'll see all deployment outputs including **floating_ip** and model endpoints in a clean interface
 
-### Step 6: Access Your Deployment
+![Output Section](assets/standard/output_section.png)
+
+### Step 7: Access Your Deployment
 Once deployment completes:
-1. Note the **floating_ip** and **reserved_ip** from the logs output (highlighted in yellow in the screenshot above)
+1. Note the **floating_ip** and **reserved_ip** from the deployment outputs
 2. SSH to your instance using the floating IP: `ssh -i ~/.ssh/your-key ubuntu@YOUR_FLOATING_IP`
 3. Verify services are running with `kubectl get pods -A`
 
@@ -323,7 +331,7 @@ To undeploy resources created through the IBM Cloud UI:
 6. Click the **3-dots menu** on the right
 7. Select **Undeploy**
 
-![Undeploy via UI](assets/undeploy.png)
+![Undeploy via UI](assets/standard/undeploy.png)
 
 > **Warning:** UI undeploy for Standard pattern removes the entire VPC and all associated resources, just like CLI cleanup.
 

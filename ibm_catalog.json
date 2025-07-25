@@ -2,17 +2,17 @@
     "products": [
         {
             "label": "Intel® AI for Enterprise Inference",
-            "name": "deploy-architecture-ibm-iaas",
+            "name": "da-enterprise-inference",
             "version": "1.0.0",
             "product_kind": "solution",
 			"tags": [
-              "iaas",
               "opea",
-              "intel_gaudi"
+              "intel_gaudi",
+              "enterprise-inference"
             ],
 		    "keywords": [
-              "iaas",
               "opea",
+              "intel_gaudi",
               "enterprise-inference"
             ],
 			"short_description": "Intel® AI for Enterprise Inference (Enterprise Inference) is aimed to streamline the deployment and management of inference services on Intel® hardware.",
