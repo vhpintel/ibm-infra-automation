@@ -28,7 +28,7 @@ With its focus on performance, scalability, and cost-efficiency, the Intel Gaudi
 
 The Intel Gaudi 3 AI accelerator is poised to play a crucial role in enabling enterprises to unlock new insights, drive innovation, and capitalize on the opportunities presented by generative AI and other complex AI workloads.
 
-More details in the [Intel® Gaudi® 3 AI Accelerator White Paper](#).
+More details in the [Intel® Gaudi® 3 AI Accelerator White Paper](https://www.intel.com/content/www/us/en/content-details/817486/intel-gaudi-3-ai-accelerator-white-paper.html).
 
 ## Understanding AI Model Hosting Requirements
 
@@ -36,7 +36,7 @@ The CPU on the Gaudi 3 servers may feature 5th Gen Intel® Xeon® processors wit
 
 | Model Size | Example Models | HPUs needed for hosting |
 |------------|----------------|------------------------|
-| 1B-32B | meta-llama/Llama-3.1-8B-Instructs | 1 HPU card (i.e.) 1/8th of a Gaudi server |
+| 1B-32B | meta-llama/Llama-3.1-8B-Instruct | 1 HPU card (i.e.) 1/8th of a Gaudi server |
 | 64-180B | meta-llama/Llama-3.3-70B-Instruct | 4 HPU cards (i.e.) 1/2 of a Gaudi server |
 | 180B-405B | meta-llama/Llama-3.1-405B-Instruct | 8 HPU cards (i.e.) Full Gaudi Server |
 
