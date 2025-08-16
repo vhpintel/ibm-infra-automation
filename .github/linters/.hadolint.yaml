@@ -1,0 +1,12 @@
+ignored:
+  - DL3006
+  - DL3007
+  - DL3008
+  - DL3042 # avoid use of cache dir with pip
+  - DL3013 # pin versions in pip
+override:
+  DL3006: warning
+  DL3007: warning
+  DL3008: warning
+  DL3042: warning
+  DL3013: warning

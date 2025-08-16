@@ -30,7 +30,7 @@
     - name: Gather information about installed services
       service_facts:
 
-  environment: "{{ proxy_disable_env }}"
+  environment: "{{ proxy_disable_env | default(env_proxy | default({})) }}"
   roles:
     - { role: kubespray-defaults}
     - { role: kubernetes/preinstall, when: "dns_mode != 'none' and resolvconf_mode == 'host_resolvconf'", tags: resolvconf, dns_early: true }

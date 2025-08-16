@@ -1,0 +1,181 @@
+affinity: {}
+clickhouse:
+  global:
+    defaultStorageClass: ""
+  resources:
+    limits:
+      cpu: "4"
+      memory: "16Gi"
+    requests:
+      cpu: "4"
+      memory: "16Gi"
+  auth:
+    password: "<PASSWORD_PLACEHOLDER>"
+    username: "<USERNAME_PLACEHOLDER>"
+  deploy: true
+  replicaCount: 3
+  resourcesPreset: 2xlarge
+  shards: 1
+  zookeeper:
+    global:
+      storageClass: ""
+    resources:
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+      requests:
+        cpu: "4"
+        memory: "8Gi"
+extraManifests: []
+fullnameOverride: ""
+image:
+  pullPolicy: Always
+  repository: langfuse/langfuse
+imagePullSecrets: []
+ingress:  
+  enabled: true
+  host: ""  
+  secretname: ""
+langfuse:
+  additionalEnv:
+  - name: REDIS_CONNECTION_STRING
+    value: "redis://<DB_USER>:<DB_PASS>@langfuse-valkey-primary:6379/0"
+  - name: CLICKHOUSE_MIGRATION_URL
+    value: clickhouse://genai-gateway-trace-clickhouse:9000
+  - name: CLICKHOUSE_URL
+    value: http://genai-gateway-trace-clickhouse:8123
+  - name: CLICKHOUSE_USER
+    value: "<USERNAME_PLACEHOLDER>"
+  - name: CLICKHOUSE_PASSWORD
+    value: "<PASSWORD_PLACEHOLDER>"  
+  - name: LANGFUSE_INIT_ORG_ID
+    value: default  
+  - name: LANGFUSE_INIT_ORG_NAME
+    value: default
+  - name: LANGFUSE_INIT_PROJECT_ID
+    value: default
+  - name: LANGFUSE_INIT_PROJECT_NAME
+    value: default  
+  - name: LANGFUSE_INIT_PROJECT_PUBLIC_KEY
+    value: ""
+  - name: LANGFUSE_INIT_PROJECT_SECRET_KEY
+    value: ""    
+  - name: LANGFUSE_INIT_USER_EMAIL
+    value: "<USERNAME_PLACEHOLDER>"
+  - name: LANGFUSE_INIT_USER_NAME
+    value: "<USERNAME_PLACEHOLDER>"
+  - name: LANGFUSE_INIT_USER_PASSWORD
+    value: "<PASSWORD_PLACEHOLDER>"    
+  - name: LANGFUSE_S3_EVENT_UPLOAD_ENABLED
+    value: "true"
+  - name: LANGFUSE_S3_EVENT_UPLOAD_BUCKET
+    value: "langfuse"
+  - name: LANGFUSE_S3_EVENT_UPLOAD_REGION
+    value: "auto"
+  - name: LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID
+    value: "minio"
+  - name: LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY
+    value: "<PASSWORD_PLACEHOLDER>"
+  - name: LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT
+    value: "http://genai-gateway-trace-minio:9000"
+  - name: LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE
+    value: "true"
+  enableExperimentalFeatures: false
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  licenseKey: ""
+  next:
+    healthcheckBasePath: ""
+  nextPublicSignUpDisabled: false
+  nextauth:
+    secret: "<PASSWORD_PLACEHOLDER>"
+    url: ""
+  nodeEnv: production
+  port: 3000
+  salt: "<PASSWORD_PLACEHOLDER>"
+  telemetryEnabled: true
+  web:
+    hpa:
+      enabled: false
+      maxReplicas: 2
+      minReplicas: 1
+      targetCPUUtilizationPercentage: 50
+    resources: {}
+    vpa:
+      controlledResources: []
+      enabled: false
+      maxAllowed: {}
+      minAllowed: {}
+      updatePolicy:
+        updateMode: Auto
+  worker:
+    hpa:
+      enabled: false
+      maxReplicas: 2
+      minReplicas: 1
+      targetCPUUtilizationPercentage: 50
+    resources: {}
+    vpa:
+      controlledResources: []
+      enabled: false
+      maxAllowed: {}
+      minAllowed: {}
+      updatePolicy:
+        updateMode: Auto
+minio:
+  auth:
+    rootPassword: "<PASSWORD_PLACEHOLDER>"
+    rootUser: "<USERNAME_PLACEHOLDER>"
+  defaultBuckets: langfuse
+  deploy: true
+nameOverride: ""
+nodeSelector: {}
+podAnnotations: {}
+podSecurityContext: {}
+postgresql:
+  architecture: standalone
+  auth:
+    database: postgres_langfuse
+    password: "<PASSWORD_PLACEHOLDER>"
+    username: "<USERNAME_PLACEHOLDER>"
+  deploy: true
+  host: genai-gateway-trace-postgresql
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: ""
+    service:
+      ports:
+        postgresql: 5432
+replicaCount: 1
+resources: {}
+securityContext: {}
+service:
+  nodePort: ""
+  port: 3000
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  create: true
+  name: ""
+tolerations: []
+valkey:
+  global:
+    defaultStorageClass: ""
+  architecture: standalone
+  auth:
+    password: "<PASSWORD_PLACEHOLDER>"
+  deploy: true
+  primary:
+    resources:
+      limits:
+        cpu: "2"
+        memory: "3Gi"
+      requests:
+        cpu: "2"
+        memory: "3Gi"
+    extraFlags:
+    - --maxmemory-policy noeviction

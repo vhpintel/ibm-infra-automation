@@ -41,6 +41,8 @@ spec:
                 name: {{ .Values.global.extraEnvConfig }}
                 optional: true
             {{- end }}
+            - secretRef:
+                name: {{ include "teirerank.fullname" . }}-secret
           securityContext:
             {{- if .Values.global.modelUseHostPath }}
             {}

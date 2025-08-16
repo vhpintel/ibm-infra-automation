@@ -2,42 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
 - name: Deploy Observability
-  hosts: kube_control_plane
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-    helm_charts_base: "{{ lookup('env', 'PWD') }}/helm-charts"    
-    remote_helm_charts_base: "/tmp/helm-charts"    
-    deploy_logging: "no"
+  hosts: "{{ inference_delegate | default('kube_control_plane') }}"
   gather_facts: false
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
-  environment: "{{ proxy_disable_env | default({}) }}"  
-  tasks:
-    - name: Ensure Python pip module is installed
-      ansible.builtin.package:
-        name: python3-pip
-        state: present
-      become: true
-      tags: always
-    - name: Install Kubernetes Python SDK
-      ansible.builtin.pip:
-        name: kubernetes
-        state: present
-        executable: /usr/bin/pip3
-      become: true
-      tags: always
-    - name: Install Deployment Client
-      ansible.builtin.shell: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-      args:
-        executable: /bin/bash
-      become: true
-      tags: always            
-    - name: Ensure jq is Installed
-      ansible.builtin.package:
-        name: jq
-        state: present
-      become: true
-      tags: always   
+  environment: "{{ proxy_disable_env | default(env_proxy | default({})) }}"
+  vars_files:        
+    - "{{ lookup('env', 'PWD') }}/config/vars/inference_common.yml"
+    - "{{ lookup('env', 'PWD') }}/config/vars/inference_observability.yml"
+    - "{{ lookup('env', 'PWD') }}/config/vault.yml"   
+  roles:
+    - role: inference-tools
+  tasks:    
     - name: Create kubernetes namespace for Observability
       community.kubernetes.k8s:
         name: observability
@@ -114,7 +89,7 @@
         chart_ref: prometheus-community/kube-prometheus-stack
         release_namespace: observability
         create_namespace: true
-        chart_version: "69.7.3"
+        chart_version: "72.5.1"                  
         values:
           kubeEtcd:
             enabled: false
@@ -342,6 +317,76 @@
       when: deploy_logging == "yes"
       tags: deploy_logging
 
+    - name: Add Grafana Helm repo (Loki)
+      run_once: true
+      tags: deploy_observability
+      community.kubernetes.helm_repository:
+        name: grafana
+        repo_url: https://grafana.github.io/helm-charts
+
+    - name: Add OpenTelemetry Helm repo
+      run_once: true
+      tags: deploy_observability
+      community.kubernetes.helm_repository:
+        name: open-telemetry
+        repo_url: https://open-telemetry.github.io/opentelemetry-helm-charts
+
+    - name: Transfer Dependency Files
+      ansible.builtin.copy:
+        src: "{{ helm_charts_base }}/"
+        dest: "{{ remote_helm_charts_base }}/"
+        mode: '0755'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        remote_src: no
+      tags: always
+
+    - name: Build chart dependencies for logs-stack chart
+      run_once: true
+      tags: deploy_observability
+      ansible.builtin.command:
+        cmd: helm dependency build logs-stack
+      args:
+        chdir: "{{ remote_helm_charts_base }}/observability"
+      become: false
+
+    - name: Install/Upgrade logs-stack chart with AWS settings
+      when: aws_access_key | length > 0
+      run_once: true
+      tags: deploy_observability
+      ansible.builtin.command:
+        cmd: >
+          helm upgrade --install logs-stack ./logs-stack
+          --namespace observability
+          -f {{ remote_helm_charts_base }}/observability/logs-stack/aws-s3-values.yaml
+          --set loki.loki.storage_config.aws.region={{ aws_region }}
+          --set loki.loki.storage_config.aws.bucketnames={{ aws_bucket }}
+          --set loki.loki.storage_config.aws.access_key_id={{ aws_access_key }}
+          --set loki.loki.storage_config.aws.secret_access_key={{ aws_secret_key }}
+          --set loki.loki.storage.bucketNames.chunks={{ aws_bucket }}
+          --set loki.loki.storage.bucketNames.admin={{ aws_bucket }}
+          --set loki.loki.storage.bucketNames.ruler={{ aws_bucket }}
+      args:
+        chdir: "{{ remote_helm_charts_base }}/observability"
+      register: logs_install
+      until: logs_install is successful
+      retries: 5
+      delay: 10
+
+    - name: Install/Upgrade logs-stack chart with Minio settings
+      when: aws_access_key | length == 0
+      run_once: true
+      tags: deploy_observability
+      ansible.builtin.command:
+        cmd: >
+          helm upgrade --install logs-stack ./logs-stack
+          --namespace observability
+      args:
+        chdir: "{{ remote_helm_charts_base }}/observability"
+      register: logs_install
+      until: logs_install is successful
+      retries: 5
+      delay: 10
 
     - name: Check if Gaudi Nodes are Available
       shell: "kubectl get nodes -l habana.ai/device.family=gaudi --no-headers | wc -l"

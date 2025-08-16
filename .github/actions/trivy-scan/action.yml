@@ -7,24 +7,21 @@ inputs:
 
 runs:
   using: 'composite'
-  steps:
+  steps:   
     - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        ref: refs/pull/${{ inputs.PR-number }}/head
-
+      uses: actions/checkout@v3
+        
     - name: Run Trivy vulnerability scanner
       uses: intel-innersource/frameworks.actions.trivy@main
       with:
-        TRIVY_REPORT_FORMAT: 'json'
+        TRIVY_REPORT_FORMAT: 'table'
         TRIVY_SCAN_TYPE: 'fs'
-        TRIVY_OUTPUT_FILE: 'trivy_fs_report_${{ github.sha }}.json'
         TRIVY_SCAN_PATH: '.'
         TRIVY_EXIT_CODE: '1'
         TRIVY_VULN_TYPE: 'os,library'
         TRIVY_SEVERITY: 'CRITICAL,HIGH'
-        TRIVY_CUSTOM_PARAMS: "--debug --list-all-pkgs"
-
+        TRIVY_CUSTOM_PARAMS: "--quiet --debug --list-all-pkgs --clear-cache"       
+        
     - name: Upload artifacts - csv
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
@@ -41,10 +38,12 @@ runs:
         exit-code: 1
         severity: 'CRITICAL,HIGH'
     - name: List Available Dockerfiles
+      shell: bash 
       run: |
         echo "Found the following Dockerfiles:"
-        find . -name "Dockerfile"
+        find . -name "Dockerfile"      
     - name: Build and Scan All Docker Images
+      shell: bash
       run: |
         mkdir -p trivy-reports
         find . -name "Dockerfile" | while read dockerfile; do
@@ -54,7 +53,7 @@ runs:
 
           docker build -t "$image_name" "$dir"
           trivy image --ignore-unfixed --format json --output "trivy-reports/$image_name.json" "$image_name"
-        done
+        done      
 
     - name: Upload Scan Reports
       uses: actions/upload-artifact@v3

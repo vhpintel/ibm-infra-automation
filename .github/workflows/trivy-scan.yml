@@ -1,26 +1,66 @@
 name: "Trivy Scan"
-on:
-  workflow_dispatch:
-    inputs:
-      PR_number:
-        description: 'Pull request number'
-        required: true
-
+on: 
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]    
 jobs:
   Trivy-scan:
     if: ${{ github.repository == 'intel-innersource/applications.ai.erag.infra-automation' }}
-    runs-on: [innersource.prod.amr.dind]
+    runs-on: innersource.prod.amr.dind
     name: Trivy Scan
-    container:
-      image: cache-registry.caas.intel.com/cache/library/python:3.11
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
-            ref: refs/pull/${{ github.event.inputs.PR_number }}/head
-
-      - name: Trivy scan
-        uses: ./.github/actions/trivy-scan
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Run Trivy vulnerability scanner
+        uses: intel-innersource/frameworks.actions.trivy@main
         with:
-          PR-number: ${{ github.event.inputs.PR_number }}
+          TRIVY_REPORT_FORMAT: 'table'
+          TRIVY_SCAN_TYPE: 'fs'
+          TRIVY_SCAN_PATH: '.'
+          TRIVY_EXIT_CODE: '1'
+          TRIVY_VULN_TYPE: 'os,library'
+          TRIVY_SEVERITY: 'CRITICAL,HIGH'
+          TRIVY_CUSTOM_PARAMS: "--quiet --debug --list-all-pkgs"      
+      - name: Set up Trivy reports directory
+        shell: bash 
+        run: |
+          mkdir -p trivy-reports
+      - name: Run Trivy Scan on Repository Files
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'   # Scans all files (IaC, dependencies, etc.)
+          ignore-unfixed: true
+          format: 'table'
+          exit-code: 1
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-reports/trivy_scan_report.txt'
+      - name: List Available Dockerfiles
+        shell: bash 
+        run: |
+          echo "Found the following Dockerfiles:"
+          find . -name "Dockerfile"  
+      - name: Build and Scan All Docker Images
+        shell: bash
+        run: |
+          mkdir -p trivy-reports
+          find . -name "Dockerfile" | while read dockerfile; do
+            dir=$(dirname "$dockerfile")
+            image_name="repo-scan-$(basename "$dir")"
+            echo "Building and scanning image: $image_name"  
+            docker build -t "$image_name" "$dir"
+            trivy image --ignore-unfixed --format json --output "trivy-reports/$image_name.json" "$image_name"            
+          done
+          ls -la
+          ls -la trivy-reports
+      - name: Upload artifacts - report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "trivy_fs_reports_${{ github.sha }}"
+          path: trivy-reports/

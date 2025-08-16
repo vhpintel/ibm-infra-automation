@@ -180,10 +180,12 @@ PT_HPU_ENABLE_LAZY_COLLECTIVES: ""
 VLLM_CPU_KVCACHE_SPACE: "40"
 VLLM_CONFIGURE_LOGGING: 1
 VLLM_NO_USAGE_STATS: 1
+DO_NOT_TRACK: 1
 
 modelConfigs:
-  model:
+  "model-id":
     configMapValues: {}
+  extraCmdArgs: []
 
 defaultModelConfigs:
   configMapValues:    
@@ -191,7 +193,6 @@ defaultModelConfigs:
     PT_HPU_ENABLE_LAZY_COLLECTIVES: "true"
     VLLM_CPU_KVCACHE_SPACE: "40"
   extraCmdArgs: ["--block-size", "128", "--dtype", "bfloat16", "--max-model-len","5196"]
-  tensor_parallel_size: "1"
 
 svcmonitor:
   enabled: false  

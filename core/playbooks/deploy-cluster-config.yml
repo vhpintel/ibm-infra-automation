@@ -1,39 +1,19 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 ---
+#- import_playbook: "{{ lookup('env', 'PWD') }}/config/inference_env.yml"
+
 - name: Deploy Cluster Configurations
-  hosts: kube_control_plane
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-    remote_helm_charts_base: "/tmp/helm-charts"
+  hosts: "{{ inference_delegate | default('kube_control_plane') }}"
   gather_facts: false
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
-  environment: "{{ proxy_disable_env | default({}) }}"
-  tasks:
-    - name: Ensure Python pip module is installed
-      ansible.builtin.package:
-        name: python3-pip
-        state: present
-      become: true
-      tags: deploy_cluster_dashboard
-    - name: Install Kubernetes Python SDK
-      ansible.builtin.pip:
-        name: kubernetes
-        state: present
-        executable: /usr/bin/pip3
-      become: true
-      tags: deploy_cluster_dashboard
-    - name: Install Deployment Client
-      ansible.builtin.shell: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-      args:
-        executable: /bin/bash
-      become: true       
-      tags: deploy_cluster_dashboard
-    # - name: Label worker nodes with inference-workload
-    #   ansible.builtin.command: >
-    #     kubectl label nodes --selector='!node-role.kubernetes.io/control-plane'
-    #     node-role.kubernetes.io/inference-workload=true                      
+  environment: "{{ proxy_disable_env | default(env_proxy | default({})) }}"
+  vars_files:    
+    - "{{ lookup('env', 'PWD') }}/config/vars/inference_common.yml"
+    - "{{ lookup('env', 'PWD') }}/config/vars/inference_delegate.yml"
+  roles:
+    - role: inference-tools    
+  tasks:                          
     - name: Create TLS cert for Admin dashboard
       community.kubernetes.k8s:
         state: present
@@ -42,7 +22,7 @@
           kind: Secret
           metadata:
             name: "{{ secret_name }}"
-            namespace: kube-system  # Change this to the desired namespace if not default
+            namespace: kube-system
           type: kubernetes.io/tls
           data:
             tls.crt: "{{ lookup('file', cert_file) | b64encode }}"
