@@ -99,59 +99,260 @@ variable "user_key" {
   description = "The contents of the TLS private key (PEM format)"
   type        = string
 }
-variable "keycloak_client_id" {
-  description = "Keycloak client id"
-  type        = string
-  default     = "ibm-app"
-}
-variable "keycloak_admin_user" {
-  description = "Keycloak admin user name"
-  type        = string
-  default     = ""
-}
-variable "keycloak_admin_password" {
-  description = "Keycloak admin password"
-  type        = string
-  default     = ""
-}
+
 variable "hugging_face_token" {
   description = "This variable specifies the hf token."
   type        = string
   default     = ""
   sensitive   = true
 }
-variable "models" {
-  description = "Model number to be deployed"
-  type        = string
-  default     = "1"
-}
 variable "cpu_or_gpu" {
   description = "This variable specifies where the model should be running"
   type        = string
   default     = "gaudi3"
 }
+variable "models" {
+  description = "Model number to be deployed"
+  type        = string
+  default     = ""
+}
+variable "vault_pass_code" {
+  description = "Vault Pass code for Encryption/Decryption"
+  type        = string
+  default     = ""
+}
+
+# IBM Secrets Manager Integration
+variable "use_secrets_manager" {
+  description = "Whether to use IBM Secrets Manager for secret management"
+  type        = bool
+  default     = false
+}
+
+variable "secrets_manager_instance_id" {
+  description = "IBM Secrets Manager instance ID (GUID). Required if use_secrets_manager is true."
+  type        = string
+  default     = ""
+}
+
+variable "secrets_manager_region" {
+  description = "IBM Secrets Manager region. Defaults to ibmcloud_region if not specified."
+  type        = string
+  default     = ""
+}
+
+variable "secrets_manager_secret_name" {
+  description = "Name of the secret in IBM Secrets Manager containing vault values"
+  type        = string
+  default     = "inference-vault-secrets"
+}
+
+
+variable "secrets_manager_secret_group_name" {
+  description = "Name of the secret group in IBM Secrets Manager. Required when specifying a secret by name."
+  type        = string
+  default     = "default"
+}
+
+# Vault secret variables - used when NOT using Secrets Manager
+variable "litellm_master_key" {
+  description = "LiteLLM Master Key - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "litellm_salt_key" {
+  description = "LiteLLM Salt Key - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "redis_password" {
+  description = "Redis Password - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "langfuse_secret_key" {
+  description = "Langfuse Secret Key - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "langfuse_public_key" {
+  description = "Langfuse Public Key - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "database_url" {
+  description = "Database URL - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "postgresql_username" {
+  description = "PostgreSQL Username - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "postgresql_password" {
+  description = "PostgreSQL Password - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "redis_auth_password" {
+  description = "Redis Auth Password - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "aws_access_key" {
+  description = "AWS Access Key - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "aws_secret_key" {
+  description = "AWS Secret Key - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "aws_region" {
+  description = "AWS Region - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "aws_bucket" {
+  description = "AWS Bucket - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+variable "clickhouse_username" {
+  description = "ClickHouse Username - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "clickhouse_password" {
+  description = "ClickHouse Password - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "langfuse_login" {
+  description = "Langfuse Login - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "langfuse_user" {
+  description = "Langfuse User - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "langfuse_password" {
+  description = "Langfuse Password - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "clickhouse_redis_url" {
+  description = "ClickHouse Redis URL - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "minio_secret" {
+  description = "MinIO Secret - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "minio_user" {
+  description = "MinIO User - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "postgres_user" {
+  description = "Postgres User - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "postgres_password" {
+  description = "Postgres Password - if provided, will automatically update vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "deploy_kubernetes_fresh" {
   description = "This variable specfies whether to deploy Kubernetes cluster freshly"
   type        = string
   default     = "yes"
 }
+
 variable "deploy_ingress_controller" {
   description = "This variable specfies whether to deploy NGNIX ingress controller or not"
   type        = string
   default     = "yes"
+}
+variable "deploy_keycloak_apisix" {
+  description = "This variable specfies whether we need to run keycloak and Apisix components"
+  type        = string
+  default     = "no"
 }
 variable "deploy_llm_models" {
   description = "This variable specfies whether we need to deploy LLM models"
   type        = string
   default     = "no"
 }
-variable "deploy_keycloak_apisix" {
-  description = "This variable specfies whether we need to run keycloak and Apisix components"
+variable "deploy_genai_gateway" {
+  description = "This variable specfies whether we need to deploy Gen AI Gateway"
   type        = string
   default     = "yes"
 }
 variable "deploy_observability" {
   description = "This variable specfies whether we need to run observability"
   type        = string
-  default     = "yes"
+  default     = "no"
+}
+variable "deploy_ceph" {
+  description = "This variable specfies whether we need to Ceph related storage components"
+  type        = string
+  default     = "no"
+}
+variable "deploy_istio" {
+  description = "This variable specfies whether we need to Istio related service mesh components"
+  type        = string
+  default     = "no"
 }

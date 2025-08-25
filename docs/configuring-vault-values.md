@@ -1,34 +1,51 @@
 # Configuring Vault Values
 
-This document explains how to configure and manage encrypted vault values for deployment.
+This document explains how to configure and manage vault values for deployment using **Automated Vault Management** within the IBM deployable architecture.
 
 ## Overview
 
-The vault file contains sensitive configuration values like passwords, API keys, and secrets that should not be stored in plain text. This file is encrypted using Ansible Vault and is located at:
+The vault file contains sensitive configuration values like passwords, API keys, and secrets. This deployment supports **automated vault management** that eliminates the manual decrypt-edit-encrypt workflow entirely.
 
+## 🚀 Automated Approach (Recommended)
+
+### How It Works
+
+1. **Set Variables**: Simply set your passwords in `terraform.tfvars`
+2. **Deploy**: Run `terraform apply`  
+3. **Automatic Processing**: The system automatically:
+   - Copies the example vault file (if available) or creates a new one
+   - Updates it with your actual passwords from Terraform variables
+   - Encrypts it (if ansible-vault is available) or leaves it as plain text
+   - Continues with deployment
+
+### Configuration
+
+Update your `terraform.tfvars` with your actual passwords:
+
+```hcl
+# Vault password for encryption/decryption
+vault_pass_code="ibm-prod-123"
+
+# Your actual secrets - set these and deployment handles the rest!
+litellm_master_key="your-actual-master-key"
+litellm_salt_key="your-actual-salt-key"
+redis_password="your-redis-password"
+postgresql_password="your-db-password"
+
+# Set any other fields you need:
+langfuse_secret_key="your-langfuse-secret"
+aws_access_key="your-aws-key"
+# ... etc
 ```
-inventory/metadata/vault.yml
+
+### That's It!
+
+Just run:
+```bash
+terraform apply
 ```
 
-## Getting Started
-
-### 1. Choose Your Deployment Type
-
-
-
-> **Note:** The example vault files provided are for demonstration purposes only. For enterprise or production deployments, you must update all passwords and secrets with your own secure values. Never use example credentials in a live environment.
-
-Before configuring your vault, refer to the appropriate example based on your deployment:
-
-**For Single Node Deployment:**
-```
-docs/examples/single-node/vault.yml
-```
-
-**For Multi Node Deployment:**
-```
-docs/examples/multi-node/vault.yml
-```
+The deployment will handle all vault operations automatically.
 
 ### 2. Decrypt the Vault File
 

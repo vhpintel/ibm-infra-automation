@@ -1,5 +1,17 @@
 #!/bin/bash
 
+# Enable strict error handling and logging
+set -e
+set -o pipefail
+
+# Enable verbose logging
+set -x
+
+# Log kernel information for debugging
+echo "[$(date)] Current kernel version: $(uname -r)"
+echo "[$(date)] System information: $(uname -a)"
+echo "[$(date)] Starting run_script.sh with parameters: $@"
+
 expand_path() {
   local path="$1"
   if [[ "$path" == ~* ]]; then
@@ -17,7 +29,6 @@ cert_path=$(expand_path "$4")
 key_path=$(expand_path "$5")
 user_cert="$6"
 user_key="$7"
-
 
 # Add this block at the top to support storage-only mode
 if [[ "$1" == "storage-only" ]]; then
@@ -66,8 +77,27 @@ if [[ "$1" == "model-deploy" ]]; then
 fi
 
 
+# Set non-interactive mode and configure apt to avoid hanging
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+export NEEDRESTART_SUSPEND=1
 
-sudo apt-get update && sudo apt-get install -y git unzip
+# Ensure no leftover lock files cause issues
+sudo rm -f /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock || true
+sudo dpkg --configure -a || true
+
+# Configure needrestart to automatically restart services without prompting
+echo '$nrconf{restart} = "a";' | sudo tee /etc/needrestart/conf.d/50local.conf
+echo '$nrconf{kernelhints} = 0;' | sudo tee -a /etc/needrestart/conf.d/50local.conf
+
+echo "[$(date)] Updating package lists and installing dependencies..."
+sudo apt-get update -yq
+sudo apt-get install -yq \
+    git \
+    unzip \
+    ansible-core
+
+echo "[$(date)] Package installation completed"
 echo "$reserved_ip $cluster_url" | sudo tee -a /etc/hosts > /dev/null
 echo -e 'y\n' | ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa -q && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
 
@@ -99,13 +129,29 @@ fi
 
 cd ~
 rm -rf /home/ubuntu/Enterprise-Inference
-git clone https://github.com/opea-project/Enterprise-Inference.git /home/ubuntu/Enterprise-Inference
+git clone https://github.com/vhpintel/ibm-infra-automation.git /home/ubuntu/Enterprise-Inference
 cd /home/ubuntu/Enterprise-Inference
 cp -f docs/examples/single-node/hosts.yaml core/inventory/hosts.yaml
 cp -f /home/ubuntu/inference-config.cfg core/inference-config.cfg
+
+# Run automated vault management if the script exists
+if [[ -f "/home/ubuntu/manage_vault.sh" ]]; then
+    echo "[$(date)] Running automated vault management..."
+    chmod +x /home/ubuntu/manage_vault.sh
+    
+    # Source the config to get vault password
+    . /home/ubuntu/inference-config.cfg
+    
+    # Run vault management with just the vault password
+    # The script will read all other values from the config file
+    /home/ubuntu/manage_vault.sh "$vault_pass_code"
+else
+    echo "[$(date)] No vault management script found, using existing vault file"
+fi
+
 chmod +x core/inference-stack-deploy.sh
 cd core
 
 # Deploys infrastructure only (no models)
 echo "[$(date)] Phase 1: Deploying entire infrastructure stack without models"
-echo -e '1\nyes\nyes\n' | bash inference-stack-deploy.sh
+echo -e '1\nyes\n' | bash inference-stack-deploy.sh
