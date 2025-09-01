@@ -4,44 +4,8 @@ provider "ibm" {
   ibmcloud_timeout = 60
 }
 
-data "ibm_sm_kv_secret" "vault_secrets" {
-  count              = var.use_secrets_manager ? 1 : 0
-  instance_id        = var.secrets_manager_instance_id
-  region             = var.secrets_manager_region != "" ? var.secrets_manager_region : var.ibmcloud_region
-  name               = var.secrets_manager_secret_name
-  secret_group_name  = var.secrets_manager_secret_group_name
-  endpoint_type      = "private"
-}
-
 locals {
     BASENAME = "gaudi"
-  # Parse secrets from Secrets Manager KV secret or use individual variables
-  secrets_from_manager = var.use_secrets_manager ? data.ibm_sm_kv_secret.vault_secrets[0].data : {}
-  vault_secrets = {
-    litellm_master_key      = var.use_secrets_manager ? lookup(local.secrets_from_manager, "litellm_master_key", "") : var.litellm_master_key
-    litellm_salt_key        = var.use_secrets_manager ? lookup(local.secrets_from_manager, "litellm_salt_key", "") : var.litellm_salt_key
-    redis_password          = var.use_secrets_manager ? lookup(local.secrets_from_manager, "redis_password", "") : var.redis_password
-    langfuse_secret_key     = var.use_secrets_manager ? lookup(local.secrets_from_manager, "langfuse_secret_key", "") : var.langfuse_secret_key
-    langfuse_public_key     = var.use_secrets_manager ? lookup(local.secrets_from_manager, "langfuse_public_key", "") : var.langfuse_public_key
-    database_url            = var.use_secrets_manager ? lookup(local.secrets_from_manager, "database_url", "") : var.database_url
-    postgresql_username     = var.use_secrets_manager ? lookup(local.secrets_from_manager, "postgresql_username", "") : var.postgresql_username
-    postgresql_password     = var.use_secrets_manager ? lookup(local.secrets_from_manager, "postgresql_password", "") : var.postgresql_password
-    redis_auth_password     = var.use_secrets_manager ? lookup(local.secrets_from_manager, "redis_auth_password", "") : var.redis_auth_password
-    aws_access_key          = var.use_secrets_manager ? lookup(local.secrets_from_manager, "aws_access_key", "") : var.aws_access_key
-    aws_secret_key          = var.use_secrets_manager ? lookup(local.secrets_from_manager, "aws_secret_key", "") : var.aws_secret_key
-    aws_region              = var.use_secrets_manager ? lookup(local.secrets_from_manager, "aws_region", "") : var.aws_region
-    aws_bucket              = var.use_secrets_manager ? lookup(local.secrets_from_manager, "aws_bucket", "") : var.aws_bucket
-    clickhouse_username     = var.use_secrets_manager ? lookup(local.secrets_from_manager, "clickhouse_username", "") : var.clickhouse_username
-    clickhouse_password     = var.use_secrets_manager ? lookup(local.secrets_from_manager, "clickhouse_password", "") : var.clickhouse_password
-    langfuse_login          = var.use_secrets_manager ? lookup(local.secrets_from_manager, "langfuse_login", "") : var.langfuse_login
-    langfuse_user           = var.use_secrets_manager ? lookup(local.secrets_from_manager, "langfuse_user", "") : var.langfuse_user
-    langfuse_password       = var.use_secrets_manager ? lookup(local.secrets_from_manager, "langfuse_password", "") : var.langfuse_password
-    clickhouse_redis_url    = var.use_secrets_manager ? lookup(local.secrets_from_manager, "clickhouse_redis_url", "") : var.clickhouse_redis_url
-    minio_secret            = var.use_secrets_manager ? lookup(local.secrets_from_manager, "minio_secret", "") : var.minio_secret
-    minio_user              = var.use_secrets_manager ? lookup(local.secrets_from_manager, "minio_user", "") : var.minio_user
-    postgres_user           = var.use_secrets_manager ? lookup(local.secrets_from_manager, "postgres_user", "") : var.postgres_user
-    postgres_password       = var.use_secrets_manager ? lookup(local.secrets_from_manager, "postgres_password", "") : var.postgres_password
-  }
 }
 
 data "ibm_resource_group" "target_rg" {
@@ -268,20 +232,56 @@ output "reserved_ip" {
   value = ibm_is_instance.vsi.primary_network_interface[0].primary_ipv4_address
 }
 
-locals {
-  model_map = {
-    "1"  = "Llama-3.1-8B-Instruct"
-    "11" = "Llama-3.1-405B-Instruct"
-	"12"  = "Llama-3.3-70B-Instruct"
-  }
-
-  selected_model = lookup(local.model_map, var.models, "unknown-model")
-}
-
-
 output "model_endpoint" {
   description = "Constructed URL for the selected Llama model endpoint"
-  value       = "https://${var.cluster_url}/${local.selected_model}/v1/completions"
+  value       = "https://${var.cluster_url}/v1/completions"
+}
+output "model_id" {
+  description = "Model ID based on the models number from terraform.tfvars"
+  value = var.models == "1" ? "meta-llama/Llama-3.1-8B-Instruct" : (
+    var.models == "11" ? "meta-llama/Llama-3.1-405B-Instruct" : (
+      var.models == "12" ? "meta-llama/Llama-3.3-70B-Instruct" : "Unknown model"
+    )
+  )
+}
+output "genAI_gateway_url" {
+  description = " GenAI Gateway URL to manage , access and interact with models"
+  value       = "https://${var.cluster_url}/ui"
+}
+
+output "genAI_gateway_url_trace_url" {
+  description = " GenAI Gateway Trace URL to manage observability, metrics, evaluations, prompt management for deployed models"
+  value       = "https://trace.${var.cluster_url}/"
+}
+
+resource "null_resource" "display_vault_content" {
+  triggers = {
+    always_run = timestamp()
+  }
+  depends_on = [null_resource.run_script]
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = can(file(var.ssh_private_key)) ? file(var.ssh_private_key) : var.ssh_private_key
+      host        = ibm_is_floating_ip.public_ip.address
+    }
+    
+    inline = [
+      "echo '=========================================='",
+      "echo 'DISPLAYING VAULT.YML CONTENT'",
+      "echo '=========================================='",
+      "cat /home/ubuntu/Enterprise-Inference/core/inventory/metadata/vault.yml || echo 'vault.yml not found'",
+      "echo '=========================================='"
+    ]
+  }
+}
+
+output "vault_yml_display_note" {
+  description = "Note about vault.yml content being displayed in Terraform logs"
+  value       = "The complete vault.yml content is displayed in the Terraform console logs during apply via remote-exec. Check the logs or search for the 'DISPLAYING VAULT.YML CONTENT' section."
+  depends_on  = [null_resource.display_vault_content]
 }
 
 data "template_file" "inference_config" {
@@ -294,30 +294,6 @@ data "template_file" "inference_config" {
     cpu_or_gpu                 = var.cpu_or_gpu
     models                     = var.models
     vault_pass_code            = var.vault_pass_code
-    # Vault secrets from Secrets Manager or variables
-    litellm_master_key         = local.vault_secrets.litellm_master_key
-    litellm_salt_key           = local.vault_secrets.litellm_salt_key
-    redis_password             = local.vault_secrets.redis_password
-    langfuse_secret_key        = local.vault_secrets.langfuse_secret_key
-    langfuse_public_key        = local.vault_secrets.langfuse_public_key
-    database_url               = local.vault_secrets.database_url
-    postgresql_username        = local.vault_secrets.postgresql_username
-    postgresql_password        = local.vault_secrets.postgresql_password
-    redis_auth_password        = local.vault_secrets.redis_auth_password
-    clickhouse_username        = local.vault_secrets.clickhouse_username
-    clickhouse_password        = local.vault_secrets.clickhouse_password
-    langfuse_login             = local.vault_secrets.langfuse_login
-    langfuse_user              = local.vault_secrets.langfuse_user
-    langfuse_password          = local.vault_secrets.langfuse_password
-    clickhouse_redis_url       = local.vault_secrets.clickhouse_redis_url
-    minio_secret               = local.vault_secrets.minio_secret
-    minio_user                 = local.vault_secrets.minio_user
-    postgres_user              = local.vault_secrets.postgres_user
-    postgres_password          = local.vault_secrets.postgres_password
-    aws_access_key             = local.vault_secrets.aws_access_key
-    aws_secret_key             = local.vault_secrets.aws_secret_key
-    aws_region                 = local.vault_secrets.aws_region
-    aws_bucket                 = local.vault_secrets.aws_bucket
     deploy_kubernetes_fresh    = var.deploy_kubernetes_fresh
     deploy_ingress_controller  = var.deploy_ingress_controller
     deploy_keycloak_apisix     = var.deploy_keycloak_apisix
@@ -373,8 +349,8 @@ resource "null_resource" "run_script" {
     }
   }
   provisioner "file" {
-    source      = "${path.module}/manage_vault.sh"
-    destination = "/home/ubuntu/manage_vault.sh"
+    source      = "${path.module}/quickstart-generate-vault-secrets.sh"
+    destination = "/home/ubuntu/quickstart-generate-vault-secrets.sh"
 
     connection {
       type        = "ssh"

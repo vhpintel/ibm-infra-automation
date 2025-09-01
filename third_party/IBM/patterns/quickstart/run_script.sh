@@ -133,21 +133,11 @@ git clone https://github.com/vhpintel/ibm-infra-automation.git /home/ubuntu/Ente
 cd /home/ubuntu/Enterprise-Inference
 cp -f docs/examples/single-node/hosts.yaml core/inventory/hosts.yaml
 cp -f /home/ubuntu/inference-config.cfg core/inference-config.cfg
+cp -f /home/ubuntu/quickstart-generate-vault-secrets.sh /home/ubuntu/Enterprise-Inference/third_party/IBM/patterns/quickstart/
+chmod +x /home/ubuntu/Enterprise-Inference/third_party/IBM/patterns/quickstart/quickstart-generate-vault-secrets.sh
+/home/ubuntu/Enterprise-Inference/third_party/IBM/patterns/quickstart/quickstart-generate-vault-secrets.sh
 
-# Run automated vault management if the script exists
-if [[ -f "/home/ubuntu/manage_vault.sh" ]]; then
-    echo "[$(date)] Running automated vault management..."
-    chmod +x /home/ubuntu/manage_vault.sh
-    
-    # Source the config to get vault password
-    . /home/ubuntu/inference-config.cfg
-    
-    # Run vault management with just the vault password
-    # The script will read all other values from the config file
-    /home/ubuntu/manage_vault.sh "$vault_pass_code"
-else
-    echo "[$(date)] No vault management script found, using existing vault file"
-fi
+echo "[$(date)] Vault secrets generated successfully"
 
 chmod +x core/inference-stack-deploy.sh
 cd core
