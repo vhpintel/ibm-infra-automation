@@ -1,0 +1,55 @@
+all:
+  hosts:
+    inference-control-plane-01:
+      ansible_host: 10.240.64.26
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: ~/.ssh/vijay-automation_rsa.prv
+    inference-control-plane-02:
+      ansible_host: 10.240.64.27
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: ~/.ssh/vijay-automation_rsa.prv
+    inference-control-plane-03:
+      ansible_host: 10.240.64.28
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: ~/.ssh/vijay-automation_rsa.prv
+    inference-workload-gaudi-node-01:
+      ansible_host: 10.240.64.25
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: ~/.ssh/vijay-automation_rsa.prv
+      node_labels:
+        node-role.kubernetes.io/inference-gaudi: "true"
+    inference-workload-gaudi-node-02:
+      ansible_host: 10.240.64.24
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: ~/.ssh/vijay-automation_rsa.prv
+      node_labels:
+        node-role.kubernetes.io/inference-gaudi: "true"
+  children:
+    kube_control_plane:
+      hosts:
+        inference-control-plane-01:
+        inference-control-plane-02:
+        inference-control-plane-03:
+    kube_node:
+      hosts:
+        inference-control-plane-01:
+        inference-control-plane-02:
+        inference-control-plane-03:
+        inference-workload-gaudi-node-01:
+        inference-workload-gaudi-node-02:
+    etcd:
+      hosts:
+        inference-control-plane-01:
+        inference-control-plane-02:
+        inference-control-plane-03:
+    kube_inference_gaudi:
+      hosts:
+        inference-workload-gaudi-node-01:
+        inference-workload-gaudi-node-02:
+    k8s_cluster:
+      children:
+        kube_control_plane:
+        kube_node:
+        kube_inference_gaudi:
+    calico_rr:
+      hosts: {}

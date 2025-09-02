@@ -68,7 +68,7 @@ variable "user_key" {
 variable "image" {
   description = "IBM Cloud instance image"
   type        = string
-  default     = "gaudi3-os-u22-01-21-0"
+  default     = ""
 }
 variable "hugging_face_token" {
   description = "This variable specifies the hf token."
@@ -76,15 +76,15 @@ variable "hugging_face_token" {
   default     = ""
   sensitive   = true
 }
-variable "cpu_or_gpu" {
-  description = "This variable specifies where the model should be running"
-  type        = string
-  default     = "gaudi3"
-}
 variable "models" {
   description = "Model number to be deployed"
   type        = string
   default     = "1"
+}
+variable "cpu_or_gpu" {
+  description = "This variable specifies where the model should be running"
+  type        = string
+  default     = "gaudi3"
 }
 variable "vault_pass_code" {
   description = "Vault Pass code for Encryption/Decryption"
@@ -102,7 +102,6 @@ variable "deploy_ingress_controller" {
   type        = string
   default     = "yes"
 }
-
 variable "deploy_keycloak_apisix" {
   description = "This variable specfies whether we need to run keycloak and Apisix components"
   type        = string
@@ -132,4 +131,67 @@ variable "deploy_istio" {
   description = "This variable specfies whether we need to Istio related service mesh components"
   type        = string
   default     = "no"
+}
+variable "deployment_mode" {
+  description = "Deployment mode for the infrastructure (single-node or multi-node)"
+  type        = string
+  default     = "single-node"
+  validation {
+    condition     = contains(["single-node", "multi-node"], var.deployment_mode)
+    error_message = "deployment_mode must be either 'single-node' or 'multi-node'"
+  }
+}
+variable "control_plane_count" {
+  description = "Number of control plane nodes (1 for single or 3 for HA) - only used in multi-node mode"
+  type        = number
+  default     = 3
+  validation {
+    condition     = contains([1, 3], var.control_plane_count)
+    error_message = "control_plane_count must be either 1 (single) or 3 (HA)"
+  }
+}
+variable "worker_gaudi_count" {
+  description = "Number of Gaudi worker nodes for inference - only used in multi-node mode"
+  type        = number
+  default     = 2
+  validation {
+    condition     = var.worker_gaudi_count >= 0 && var.worker_gaudi_count <= 10
+    error_message = "worker_gaudi_count must be between 0 and 10"
+  }
+}
+
+variable "xeon_image" {
+  description = "IBM Cloud instance image for Xeon/CPU nodes in multi-node deployment"
+  type        = string
+  default     = "ibm-ubuntu-22-04-5-minimal-amd64-2"  # Default Ubuntu image for CPU nodes
+}
+
+variable "gaudi_image" {
+  description = "IBM Cloud instance image for Gaudi nodes in multi-node deployment"
+  type        = string
+  default     = "gaudi3-os-u22-01-21-0"  # Default Gaudi image
+}
+
+variable "control_plane_names" {
+  description = "Optional custom names for control plane nodes. If not provided, defaults to 'inference-control-plane-01', etc."
+  type        = list(string)
+  default     = []
+}
+
+variable "worker_gaudi_names" {
+  description = "Optional custom names for Gaudi worker nodes. If not provided, defaults to 'inference-workload-gaudi-node-01', etc."
+  type        = list(string)
+  default     = []
+}
+
+variable "instance_profile" {
+  description = "IBM Cloud instance profile for single-node deployment and worker nodes in multi-node deployment"
+  type        = string
+  default     = "gx3d-160x1792x8gaudi3"
+}
+
+variable "control_plane_instance_profile" {
+  description = "IBM Cloud instance profile for control plane nodes in multi-node deployment"
+  type        = string
+  default     = "cx2d-32x64"
 }

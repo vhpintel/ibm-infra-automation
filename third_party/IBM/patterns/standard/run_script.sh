@@ -1,17 +1,5 @@
 #!/bin/bash
 
-# Enable strict error handling and logging
-set -e
-set -o pipefail
-
-# Enable verbose logging
-set -x
-
-# Log kernel information for debugging
-echo "[$(date)] Current kernel version: $(uname -r)"
-echo "[$(date)] System information: $(uname -a)"
-echo "[$(date)] Starting run_script.sh with parameters: $@"
-
 expand_path() {
   local path="$1"
   if [[ "$path" == ~* ]]; then
@@ -22,13 +10,30 @@ expand_path() {
 }
 
 
-reserved_ip=$1
-cluster_url=$2
-models=$3
-cert_path=$(expand_path "$4")
-key_path=$(expand_path "$5")
-user_cert="$6"
-user_key="$7"
+# Check deployment mode based on first argument
+if [[ "$1" != "multi-node" ]]; then
+  # Single-node deployment (default/existing behavior)
+  deployment_mode="single-node"
+  reserved_ip=$1
+  cluster_url=$2
+  models=$3
+  cert_path=$(expand_path "$4")
+  key_path=$(expand_path "$5")
+  user_cert="$6"
+  user_key="$7"
+else
+  # Multi-node deployment
+  deployment_mode="multi-node"
+  shift  # Remove 'multi-node' from arguments
+  reserved_ip=$1  # First control plane node IP
+  cluster_url=$2
+  models=$3
+  cert_path=$(expand_path "$4")
+  key_path=$(expand_path "$5")
+  user_cert="$6"
+  user_key="$7"
+fi
+
 
 # Add this block at the top to support storage-only mode
 if [[ "$1" == "storage-only" ]]; then
@@ -77,27 +82,8 @@ if [[ "$1" == "model-deploy" ]]; then
 fi
 
 
-# Set non-interactive mode and configure apt to avoid hanging
-export DEBIAN_FRONTEND=noninteractive
-export NEEDRESTART_MODE=a
-export NEEDRESTART_SUSPEND=1
 
-# Ensure no leftover lock files cause issues
-sudo rm -f /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock || true
-sudo dpkg --configure -a || true
-
-# Configure needrestart to automatically restart services without prompting
-echo '$nrconf{restart} = "a";' | sudo tee /etc/needrestart/conf.d/50local.conf
-echo '$nrconf{kernelhints} = 0;' | sudo tee -a /etc/needrestart/conf.d/50local.conf
-
-echo "[$(date)] Updating package lists and installing dependencies..."
-sudo apt-get update -yq
-sudo apt-get install -yq \
-    git \
-    unzip \
-    ansible-core
-
-echo "[$(date)] Package installation completed"
+sudo apt-get update && sudo apt-get install -y git unzip
 echo "$reserved_ip $cluster_url" | sudo tee -a /etc/hosts > /dev/null
 echo -e 'y\n' | ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa -q && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
 
@@ -129,18 +115,20 @@ fi
 
 cd ~
 rm -rf /home/ubuntu/Enterprise-Inference
-git clone https://github.com/vhpintel/ibm-infra-automation.git /home/ubuntu/Enterprise-Inference
+git clone https://github.com/opea-project/Enterprise-Inference.git /home/ubuntu/Enterprise-Inference
 cd /home/ubuntu/Enterprise-Inference
-cp -f docs/examples/single-node/hosts.yaml core/inventory/hosts.yaml
-cp -f /home/ubuntu/inference-config.cfg core/inference-config.cfg
-cp -f /home/ubuntu/quickstart-generate-vault-secrets.sh /home/ubuntu/Enterprise-Inference/third_party/IBM/patterns/quickstart/
-chmod +x /home/ubuntu/Enterprise-Inference/third_party/IBM/patterns/quickstart/quickstart-generate-vault-secrets.sh
-/home/ubuntu/Enterprise-Inference/third_party/IBM/patterns/quickstart/quickstart-generate-vault-secrets.sh
-echo "[$(date)] Vault secrets generated successfully"
 
+# Copy appropriate hosts.yaml based on deployment mode
+if [[ "$deployment_mode" == "single-node" ]]; then
+  cp -f docs/examples/single-node/hosts.yaml core/inventory/hosts.yaml
+else
+  # For multi-node, use the Terraform-generated inventory
+  cp -f /tmp/multi_node_hosts.yaml core/inventory/hosts.yaml
+fi
+cp -f /home/ubuntu/inference-config.cfg core/inference-config.cfg
 chmod +x core/inference-stack-deploy.sh
 cd core
 
 # Deploys infrastructure only (no models)
 echo "[$(date)] Phase 1: Deploying entire infrastructure stack without models"
-echo -e '1\nyes\n' | bash inference-stack-deploy.sh
+echo -e '1\nyes\nyes\n' | bash inference-stack-deploy.sh

@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Quickstart Individual Vault Secrets Auto-Generator
